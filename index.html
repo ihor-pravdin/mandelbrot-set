@@ -10,8 +10,8 @@
         }
 
         .m-set__bg {
-            height: 750px;
-            width: 900px;
+            height: 1500px;
+            width: 4500px;
             background: black;
         }
 
@@ -25,14 +25,14 @@
 <body>
 <div class="m-set">
     <div class="m-set__bg"></div>
-    <canvas id="m-set__canvas" class="m-set__canvas" height="750" width="900"></canvas>
+    <canvas id="m-set__canvas" class="m-set__canvas" height="1500" width="4500"></canvas>
 </div>
 <script>
     const canvas = document.getElementById("m-set__canvas");
     const ctx = canvas.getContext('2d');
 
-    const accuracy = 100;
-    const scale = 250;
+    const accuracy = 1000;
+    const scale = 1000;
     const pixelSize = 0.1;
     const bufferSize = 1000;
 
@@ -43,31 +43,46 @@
         const y = point.y * scale + center.y;
         const i = point.z.length - 1;
 
-        let color = '#ffffff';
+        let color = '#fff';
 
         switch (true) {
-            case i <= 40:
+            case i < 40:
                 color = 'rgb(' + Math.floor(i * 10 - (x + y) / 20) + ',' + Math.floor(i * 10 + x/10) + ',' + Math.floor(i * 10 + y/10) + ')';
                 break;
-            case i <= 60:
-                color = '#fcfb26';
+            case i < 100:
+                color = 'rgb(' + Math.floor((x + y) / 5 - i) + ',' + Math.floor(i + x/10 - 30) + ',' + Math.floor(i + y/10 - 30) + ')';
                 break;
-            case i <= 80:
-                color = '#ff7004';
+            case i < 500:
+                color = 'rgb(' + Math.floor(i - (x + y) / 10 - 50) + ',' + Math.floor(i/2 - x/5) + ',' + Math.floor(i/2 - y/5) + ')';
                 break;
-            case i <= 100:
-                color = '#fd0000';
-                break;
-            case i <= 300:
-                color = '#f50782';
-                break;
-            case i <= 500:
-                color = '#e507f5';
-                break;
-            case i <= 800:
-                color = '#5a07f5';
+            case i >= 500:
+                color = 'rgb(' + Math.floor(i/10 + (x + y) / 10) + ',' + Math.floor(i/10 + x/10) + ',' + Math.floor(i/10 + y/10) + ')';
                 break;
         }
+
+        // switch (true) {
+        //     case i <= 40:
+        //         color = 'rgb(' + Math.floor(i * 10 - (x + y) / 20) + ',' + Math.floor(i * 10 + x/10) + ',' + Math.floor(i * 10 + y/10) + ')';
+        //         break;
+        //     case i <= 60:
+        //         color = '#fcfb26';
+        //         break;
+        //     case i <= 80:
+        //         color = '#ff7004';
+        //         break;
+        //     case i <= 100:
+        //         color = '#fd0000';
+        //         break;
+        //     case i <= 300:
+        //         color = '#f50782';
+        //         break;
+        //     case i <= 500:
+        //         color = '#e507f5';
+        //         break;
+        //     case i <= 800:
+        //         color = '#5a07f5';
+        //         break;
+        // }
 
         ctx.beginPath();
         ctx.strokeStyle = color;
@@ -84,7 +99,7 @@
         for (let i = 1; i <= accuracy; i++) {
             z[i] = c.add(z[i - 1].mul(z[i - 1])); // c + z*z
 
-            if (z[i].mul(z[i]) >= 4 || !isFinite(z[i].re) || !isFinite(z[i].im)) {
+            if (z[i].mul(z[i]) >= 4 || !isFinite(z[i].re) || !isFinite(z[i].im) || (z[i].re === 0 && z[i].im === 0)) {
                 break;
             }
         }
