@@ -1,0 +1,17 @@
+{
+  "name": "mandelbrot-set",
+  "homepage": "https://github.com/igor-pravdin/mandelbrot-set",
+  "description": "Render mandelbrot set",
+  "main": "index.html",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "complex.js": "^2.0.11"
+  }
+}

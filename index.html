@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>mandelbrot-set</title>
+    <script src="bower_components/complex.js/complex.js"></script>
+    <style>
+        .m-set {
+            position: relative;
+        }
+
+        .m-set__bg {
+            height: 750px;
+            width: 900px;
+            background: black;
+        }
+
+        .m-set__canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+<div class="m-set">
+    <div class="m-set__bg"></div>
+    <canvas id="m-set__canvas" class="m-set__canvas" height="750" width="900"></canvas>
+</div>
+<script>
+    const canvas = document.getElementById("m-set__canvas");
+    const ctx = canvas.getContext('2d');
+
+    const accuracy = 100;
+    const scale = 250;
+    const pixelSize = 0.1;
+    const bufferSize = 1000;
+
+    const center = {x: canvas.width / 2, y: canvas.height / 2};
+
+    const drawPoint = point => {
+        const x = point.x * scale + center.x;
+        const y = point.y * scale + center.y;
+        const i = point.z.length - 1;
+
+        let color = '#ffffff';
+
+        switch (true) {
+            case i <= 40:
+                color = 'rgb(' + Math.floor(i * 10 - (x + y) / 20) + ',' + Math.floor(i * 10 + x/10) + ',' + Math.floor(i * 10 + y/10) + ')';
+                break;
+            case i <= 60:
+                color = '#fcfb26';
+                break;
+            case i <= 80:
+                color = '#ff7004';
+                break;
+            case i <= 100:
+                color = '#fd0000';
+                break;
+            case i <= 300:
+                color = '#f50782';
+                break;
+            case i <= 500:
+                color = '#e507f5';
+                break;
+            case i <= 800:
+                color = '#5a07f5';
+                break;
+        }
+
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.moveTo(x - pixelSize, y - pixelSize);
+        ctx.lineTo(x + pixelSize, y + pixelSize);
+
+        ctx.stroke();
+    };
+
+    const getZ = c => {
+        const z = [];
+        z[0] = c;
+
+        for (let i = 1; i <= accuracy; i++) {
+            z[i] = c.add(z[i - 1].mul(z[i - 1])); // c + z*z
+
+            if (z[i].mul(z[i]) >= 4 || !isFinite(z[i].re) || !isFinite(z[i].im)) {
+                break;
+            }
+        }
+
+        return z;
+    };
+
+    const isBelongsToSet = z => {
+        return z[0].equals(z[2]) || Math.pow(z[z.length - 1].re, 2) - Math.pow(z[z.length - 1].im, 2) < 4;
+    };
+
+    const defineRange = function* (first, last, stepX, stepY) {
+        let x = first;
+        let y = first;
+        const width = canvas.width - 1;
+        const height = canvas.height - 1;
+        while (x <= width && y <= height && x >= -width && y >= -height) {
+            if (x / width === stepX) {
+                x = first;
+                y += stepY;
+            }
+            x += stepX;
+            yield [x, y];
+        }
+    };
+
+    const defineQuarter = (first, last, stepX, stepY) => ({
+        range: defineRange(first, last, stepX, stepY),
+        accuracy: last * scale * stepX
+    });
+
+    const run = (quarters, buffer = []) => {
+        quarters = quarters.map(quarter => ({
+            ...quarter,
+            point: quarter.range.next().value
+        })).filter(quarter => quarter.point !== undefined);
+
+        if (quarters.length) {
+
+            const points = quarters.reduce((points, quarter) => {
+                const c = new Complex(quarter.point[0] / quarter.accuracy, quarter.point[1] / quarter.accuracy);
+                const z = getZ(c);
+                if (!isBelongsToSet(z)) {
+                    points.push({x: c.re, y: c.im, z: z});
+                }
+                return points;
+            }, []);
+
+            if (points.length) {
+                points.forEach(point => buffer.push(point));
+            }
+
+            if (buffer.length >= bufferSize) {
+                buffer.forEach(point => drawPoint(point));
+
+                return setTimeout(() => run(quarters), 0);
+            }
+
+            return run(quarters, buffer);
+        }
+
+        console.log('Done!!!');
+    };
+
+
+    const main = () => {
+        // Draw coordinates
+        // ctx.fillStyle = 'black';
+        // ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // ctx.beginPath();
+        // ctx.strokeStyle = 'white';
+        // ctx.moveTo(0, canvas.height / 2);
+        // ctx.lineTo(canvas.width, canvas.height / 2);
+        // ctx.moveTo(canvas.width / 2, 0);
+        // ctx.lineTo(canvas.width / 2, canvas.height);
+        // ctx.stroke();
+        // Define quarters
+        const quarters = [
+            defineQuarter(0, 2, 1, 1),
+            defineQuarter(0, -2, -1, 1),
+            defineQuarter(0, -2, -1, -1),
+            defineQuarter(0, 2, 1, -1)
+        ];
+        // Start render
+        console.log('Start!!!');
+        run(quarters);
+    };
+
+    main();
+
+</script>
+
+</body>
+</html>
