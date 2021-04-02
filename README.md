@@ -1,6 +1,7 @@
 # mandelbrot-set
-Render mandelbrot set
-- [EXAMPLE](https://igor-pravdin.github.io/mandelbrot-set/)
+Renders Mandelbrot Set
+
+[EXAMPLE](https://igor-pravdin.github.io/mandelbrot-set/)
 
 ![mandelbrot set](mset.png)
 
