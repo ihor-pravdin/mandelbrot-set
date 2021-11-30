@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <title>Mandelbrot Set</title>
-    <script src="https://cdn.jsdelivr.net/combine/npm/moo@0.5.1,npm/nearley@2.19.1,npm/complex-js"></script>
     <style>
         .m-set {
             position: relative;
         }
+
         .m-set__bg {
             height: 800px;
             width: 800px;
             background: black;
         }
+
         .m-set__canvas {
             position: absolute;
             top: 0;
@@ -29,154 +30,97 @@
     const canvas = document.getElementById("m-set__canvas");
     const ctx = canvas.getContext('2d');
 
-    // play with values to change set view
-    const accuracy = 100;
+    const {width, height} = canvas;
+    const center = {x: width / 2, y: height / 2};
+
     const scale = 250;
-    const pixelSize = 1;
-    const bufferSize = 100;
+    const accuracy = 100;
 
-    const center = {x: canvas.width / 2, y: canvas.height / 2};
-
-    const {Complex} = window;
-
-    const drawPoint = point => {
-        const x = point.x * scale + center.x;
-        const y = point.y * scale + center.y;
-        const i = point.z.length - 1;
-
-        let color = '#9b4cd4';
-
-        switch (true) {
-            case i <= 40:
-                color = 'rgb(' + Math.floor(i * 10 - (x + y) / 20) + ',' + Math.floor(i * 10 + x/10) + ',' + Math.floor(i * 10 + y/10) + ')';
-                break;
-            case i <= 60:
-                color = '#fcfb26';
-                break;
-            case i <= 80:
-                color = '#ff7004';
-                break;
-            case i <= 100:
-                color = '#fd0000';
-                break;
-            case i <= 300:
-                color = '#f50782';
-                break;
-            case i <= 500:
-                color = '#e507f5';
-                break;
-            case i <= 800:
-                color = '#5a07f5';
-                break;
-        }
-
-        ctx.beginPath();
-        ctx.strokeStyle = color;
-        ctx.moveTo(x - pixelSize, y - pixelSize);
-        ctx.lineTo(x + pixelSize, y + pixelSize);
-
-        ctx.stroke();
-    };
-
-    const getZ = c => {
-        const z = [];
-        z[0] = c;
-
-        for (let i = 1; i <= accuracy; i++) {
-            // noinspection JSUnresolvedFunction
-            z[i] = c.add(z[i - 1].mul(z[i - 1])); // c + z*z
-            // noinspection JSUnresolvedFunction
-            if (z[i].mul(z[i]) >= 4 || !isFinite(z[i].real) || !isFinite(z[i].imag) || (z[i].real === 0 && z[i].imag === 0)) {
-                break;
-            }
-        }
-
-        return z;
-    };
-
-    const isBelongsToSet = z => {
-        // noinspection JSUnresolvedFunction
-        return z[0].equals(z[2]) || Math.pow(z[z.length - 1].real, 2) - Math.pow(z[z.length - 1].imag, 2) < 4;
-    };
-
-    const defineRange = function* (first, last, stepX, stepY) {
-        let x = first;
-        let y = first;
-        const width = canvas.width - 1;
-        const height = canvas.height - 1;
+    const defineRange = function* (stepX, stepY) {
+        let x = 0;
+        let y = 0;
         while (x <= width && y <= height && x >= -width && y >= -height) {
             if (x / width === stepX) {
-                x = first;
+                x = 0;
                 y += stepY;
             }
             x += stepX;
-            yield [x, y];
+            yield {x, y};
         }
-    };
+    }
 
-    const defineQuarter = (first, last, stepX, stepY) => ({
-        range: defineRange(first, last, stepX, stepY),
-        accuracy: last * scale * stepX
-    });
+    const addZ = point => {
+        const arr = [point];
+        for (let i = 0; i < accuracy; i++) {
+            let x = Math.pow(arr[i].x, 2) - Math.pow(arr[i].y, 2) + arr[0].x;
+            let y = 2 * arr[i].x * arr[i].y + arr[0].y;
+            if ((x === 0 && y === 0) || !isFinite(x) || !isFinite(y)) {
+                break;
+            } else {
+                arr.push({x, y});
+            }
+        }
+        return {...point, z: arr};
+    }
 
-    const run = (quarters, buffer = []) => {
-        quarters = quarters.map(quarter => ({
-            ...quarter,
-            point: quarter.range.next().value
-        })).filter(quarter => quarter.point !== undefined);
+    const isBelongsToSet = ({x, y}) => Math.pow(x, 2) + Math.pow(y, 2) > 4;
 
-        if (quarters.length) {
+    const pixelIndex = (x, y) => y * (width * 4) + x * 4;
 
-            const points = quarters.reduce((points, quarter) => {
-                const c = new Complex(quarter.point[0] / quarter.accuracy, quarter.point[1] / quarter.accuracy);
-                const z = getZ(c);
-                if (!isBelongsToSet(z)) {
-                    points.push({x: c.real, y: c.imag, z: z});
+    const pixelColor = color => color > 255 ? color % 255 : color;
+
+    const setPixel = (data, point) => {
+        let x = (point.x * scale + center.x).toFixed();
+        let y = (point.y * scale + center.y).toFixed();
+        let i = point.z.length;
+
+        data[pixelIndex(x, y)] = pixelColor(i * 3);
+        data[pixelIndex(x, width - y)] = pixelColor(i * 3);
+
+        data[pixelIndex(x, y) + 1] = pixelColor(i * 6);
+        data[pixelIndex(x, width - y) + 1] = pixelColor(i * 6);
+
+        data[pixelIndex(x, y) + 2] = pixelColor(i * 9);
+        data[pixelIndex(x, width - y) + 2] = pixelColor(i * 9);
+
+        data[pixelIndex(x, y) + 3] = 255;
+        data[pixelIndex(x, width - y) + 3] = 255;
+
+        return data;
+    }
+
+    const render = () => {
+        return new Promise(resolve => {
+            const imageData = ctx.createImageData(width, height);
+
+            const left = defineRange(-1, -1);
+            const right = defineRange(1, -1);
+
+            let nextLPoint = left.next();
+            let nextRPoint = right.next();
+
+            for (; !nextLPoint.done || !nextRPoint.done; nextLPoint = left.next(), nextRPoint = right.next()) {
+
+                let leftPoint = addZ({x: nextLPoint.value.x / (scale * 2), y: nextLPoint.value.y / (scale * 2)});
+                let rightPoint = addZ({x: nextRPoint.value.x / (scale * 2), y: nextRPoint.value.y / (scale * 2)});
+
+                if (isBelongsToSet(leftPoint.z[leftPoint.z.length - 1])) {
+                    imageData.data = setPixel(imageData.data, leftPoint);
                 }
-                return points;
-            }, []);
 
-            if (points.length) {
-                points.forEach(point => buffer.push(point));
+                if (isBelongsToSet(rightPoint.z[rightPoint.z.length - 1])) {
+                    imageData.data = setPixel(imageData.data, rightPoint);
+                }
+
             }
 
-            if (buffer.length >= bufferSize) {
-                buffer.forEach(point => drawPoint(point));
+            ctx.putImageData(imageData, 0, 0);
 
-                return setTimeout(() => run(quarters), 0);
-            }
+            return resolve(imageData);
+        });
+    }
 
-            return run(quarters, buffer);
-        }
-
-        console.log('Done!!!');
-    };
-
-
-    const main = () => {
-        // Draw coordinates
-        // ctx.fillStyle = 'black';
-        // ctx.fillRect(0, 0, canvas.width, canvas.height);
-        // ctx.beginPath();
-        // ctx.strokeStyle = 'white';
-        // ctx.moveTo(0, canvas.height / 2);
-        // ctx.lineTo(canvas.width, canvas.height / 2);
-        // ctx.moveTo(canvas.width / 2, 0);
-        // ctx.lineTo(canvas.width / 2, canvas.height);
-        // ctx.stroke();
-        // Define quarters
-        const quarters = [
-            defineQuarter(0, 2, 1, 1),
-            defineQuarter(0, -2, -1, 1),
-            defineQuarter(0, -2, -1, -1),
-            defineQuarter(0, 2, 1, -1)
-        ];
-        // Start render
-        console.log('Start!!!');
-        run(quarters);
-    };
-
-    main();
+    render().then(() => console.log("Done!"));
 
 </script>
 
