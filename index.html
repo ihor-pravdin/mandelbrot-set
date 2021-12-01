@@ -73,14 +73,19 @@
         let x = (point.x * scale + center.x).toFixed();
         let y = (point.y * scale + center.y).toFixed();
         let i = point.z.length;
-        data[pixelIndex(x, y)] = pixelColor(i * 3);
-        data[pixelIndex(x, height - y)] = pixelColor(i * 3);
-        data[pixelIndex(x, y) + 1] = pixelColor(i * 6);
-        data[pixelIndex(x, height - y) + 1] = pixelColor(i * 6);
-        data[pixelIndex(x, y) + 2] = pixelColor(i * 9);
-        data[pixelIndex(x, height - y) + 2] = pixelColor(i * 9);
-        data[pixelIndex(x, y) + 3] = 255;
-        data[pixelIndex(x, height - y) + 3] = 255;
+        let topIndex = pixelIndex(x, y);
+        let bottomIndex = pixelIndex(x, height - y);
+        let red = pixelColor(i * 3);
+        let green = pixelColor(i * 6);
+        let blue = pixelColor(i * 9);
+        data[topIndex] = red;
+        data[bottomIndex] = red;
+        data[topIndex + 1] = green;
+        data[bottomIndex + 1] = green;
+        data[topIndex + 2] = blue;
+        data[bottomIndex + 2] = blue;
+        data[topIndex + 3] = 255;
+        data[bottomIndex + 3] = 255;
         return data;
     }
 
