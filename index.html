@@ -80,12 +80,12 @@
         let blue = pixelColor(i * 9);
         data[topIndex] = red;
         data[bottomIndex] = red;
-        data[topIndex + 1] = green;
-        data[bottomIndex + 1] = green;
-        data[topIndex + 2] = blue;
-        data[bottomIndex + 2] = blue;
-        data[topIndex + 3] = 255;
-        data[bottomIndex + 3] = 255;
+        data[++topIndex] = green;
+        data[++bottomIndex] = green;
+        data[++topIndex] = blue;
+        data[++bottomIndex] = blue;
+        data[++topIndex] = 255;
+        data[++bottomIndex] = 255;
         return data;
     }
 
