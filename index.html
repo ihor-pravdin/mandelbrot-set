@@ -87,30 +87,21 @@
     const render = () => {
         return new Promise(resolve => {
             const imageData = ctx.createImageData(width, height);
-
             const left = defineRange(-1, -1);
             const right = defineRange(1, -1);
-
             let nextLPoint = left.next();
             let nextRPoint = right.next();
-
             for (; !nextLPoint.done || !nextRPoint.done; nextLPoint = left.next(), nextRPoint = right.next()) {
-
                 let leftPoint = addZ({x: nextLPoint.value.x / (scale * 2), y: nextLPoint.value.y / (scale * 2)});
                 let rightPoint = addZ({x: nextRPoint.value.x / (scale * 2), y: nextRPoint.value.y / (scale * 2)});
-
                 if (isBelongsToSet(leftPoint.z[leftPoint.z.length - 1])) {
                     imageData.data = setPixel(imageData.data, leftPoint);
                 }
-
                 if (isBelongsToSet(rightPoint.z[rightPoint.z.length - 1])) {
                     imageData.data = setPixel(imageData.data, rightPoint);
                 }
-
             }
-
             ctx.putImageData(imageData, 0, 0);
-
             return resolve(imageData);
         });
     }
