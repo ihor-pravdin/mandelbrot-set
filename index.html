@@ -65,27 +65,22 @@
 
     const isBelongsToSet = ({x, y}) => Math.pow(x, 2) + Math.pow(y, 2) > 4;
 
-    const pixelIndex = (x, y) => y * (width * 4) + x * 4;
+    const pixelIndex = (x, y) => y * width * 4 + x * 4;
 
-    const pixelColor = color => color > 255 ? color % 255 : color;
+    const pixelColor = color => Math.abs(color) % 255;
 
     const setPixel = (data, point) => {
         let x = (point.x * scale + center.x).toFixed();
         let y = (point.y * scale + center.y).toFixed();
         let i = point.z.length;
-
         data[pixelIndex(x, y)] = pixelColor(i * 3);
-        data[pixelIndex(x, width - y)] = pixelColor(i * 3);
-
+        data[pixelIndex(x, height - y)] = pixelColor(i * 3);
         data[pixelIndex(x, y) + 1] = pixelColor(i * 6);
-        data[pixelIndex(x, width - y) + 1] = pixelColor(i * 6);
-
+        data[pixelIndex(x, height - y) + 1] = pixelColor(i * 6);
         data[pixelIndex(x, y) + 2] = pixelColor(i * 9);
-        data[pixelIndex(x, width - y) + 2] = pixelColor(i * 9);
-
+        data[pixelIndex(x, height - y) + 2] = pixelColor(i * 9);
         data[pixelIndex(x, y) + 3] = 255;
-        data[pixelIndex(x, width - y) + 3] = 255;
-
+        data[pixelIndex(x, height - y) + 3] = 255;
         return data;
     }
 
