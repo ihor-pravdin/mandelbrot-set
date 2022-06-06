@@ -1,0 +1,15 @@
+.m-set {
+    position: relative;
+}
+
+.m-set__bg {
+    height: 800px;
+    width: 800px;
+    background: black;
+}
+
+.m-set__canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}

@@ -1,5 +1,5 @@
 # mandelbrot-set
-Renders Mandelbrot Set
+Mandelbrot Set Rendering
 
 [EXAMPLE](https://igor-pravdin.github.io/mandelbrot-set/)
 
